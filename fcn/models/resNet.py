@@ -26,11 +26,6 @@ class ResNet(resnet101):
     def forward(self, x):
         output = {}
 
-        # get the output of each maxpooling layer
-        for idx in range(len(self.ranges)):
-            for layer in range(self.ranges[idx][0], self.ranges[idx][1]):
-                x = self.features[layer](x)
-            output["x%d"%(idx+1)] = x
 
         return output
 

@@ -130,6 +130,16 @@ class VOCSegmentation(data.Dataset):
 if __name__ == '__main__':
 # todo(bdd) : sanity checking seen in tests/cifar.py ... remove before merging,
     print('What')
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     pascal = VOCSegmentation('../pascal-voc')
     print(pascal[3])
 
+=======
+# pascal = VOCSegmentation('/tmp/pascal-voc/')
+# print(pascal[3])
+>>>>>>> Stashed changes
+=======
+# pascal = VOCSegmentation('/tmp/pascal-voc/')
+# print(pascal[3])
+>>>>>>> Stashed changes

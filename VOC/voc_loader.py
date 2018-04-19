@@ -1,5 +1,6 @@
 # Data loader
 
+import collections
 import pandas as pd
 import numpy as np
 import scipy.misc
@@ -12,9 +13,10 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import utils
 from __future__ import print_function
 
+
 class VOCdataset(Dataset):
-	url = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'
-	class_names = np.array([
+    url = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'
+    class_names = np.array([
         'background',
         'aeroplane',
         'bicycle',
@@ -37,6 +39,7 @@ class VOCdataset(Dataset):
         'train',
         'tv/monitor',
     ])
+
     mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
 
     def __init__(self, root, split='train', transform=False):
@@ -96,3 +99,13 @@ class VOCdataset(Dataset):
         img = img[:, :, ::-1]
         lbl = lbl.numpy()
         return img, lbl
+
+
+class VOC2012(VOCdataset):
+    url = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'  # NOQA
+
+    def __init__(self, root, split='train', transform=False):
+        super(VOC2012, self).__init__(
+            root, split=split, transform=transform)
+
+V2012
