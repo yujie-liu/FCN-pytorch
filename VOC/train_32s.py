@@ -3,7 +3,6 @@ from __future__ import division
 import torch
 from torch.autograd import Variable
 from torch.utils import data
-from loss import CrossEntropy2d, CrossEntropyLoss2d
 from visualize import LinePlotter
 from transform import ReLabel, ToLabel, ToSP, Scale
 from torchvision.transforms import Compose, CenterCrop, Normalize, ToTensor
@@ -12,6 +11,7 @@ from PIL import Image
 import numpy as np
 import fcn
 from voc_loader2 import VOCSegmentation
+
 
 input_transform = Compose([
     Scale((256, 256), Image.BILINEAR),
@@ -32,10 +32,11 @@ trainloader = data.DataLoader(VOCSegmentation("../pascal-voc", img_transform=inp
 
 
 if torch.cuda.is_available():
-    model = fcn.models.fcn32s()
+    vgg_model = fcn.vgg16.VGGNet(requires_grad=True)
+    model = fcn.models.fcn32s(vgg_model)
     model.cuda()
 
-epoches = 5
+epoches = 5 # Orignially 80
 lr = 1e-4
 weight_decay = 2e-5
 momentum = 0.9
