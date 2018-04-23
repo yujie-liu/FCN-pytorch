@@ -10,7 +10,7 @@ from torchvision.models.vgg import VGG
 class FCN32s(nn.Module):
 
     def __init__(self, pretrained_net, n_class):
-        super(FCN32s, self, pretrained_net, n_class).__init__()
+        super(FCN32s, self).__init__()
         self.n_class = n_class
         self.pretrained_net = pretrained_net
         self.relu = nn.ReLU(inplace=True)
@@ -43,7 +43,7 @@ class FCN32s(nn.Module):
 class FCN16s(nn.Module):
 
     def __init__(self, pretrained_net, n_class):
-        super(FCN16s, self, pretrained_net, n_class).__init__()
+        super(FCN16s, self).__init__()
         self.n_class = n_class
         self.pretrained_net = pretrained_net
         self.relu = nn.ReLU(inplace=True)
@@ -78,7 +78,7 @@ class FCN16s(nn.Module):
 class FCN8s(nn.Module):
 
     def __init__(self, pretrained_net, n_class):
-        super(FCN8s, self, pretrained_net, n_class).__init__()
+        super(FCN8s, self).__init__()
         self.n_class = n_class
         self.pretrained_net = pretrained_net
         self.relu = nn.ReLU(inplace=True)
@@ -115,7 +115,7 @@ class FCN8s(nn.Module):
 class FCNs(nn.Module):
 
     def __init__(self, pretrained_net, n_class):
-        super(FCNs, self, pretrained_net, n_class).__init__()
+        super(FCNs, self).__init__()
         self.n_class = n_class
         self.pretrained_net = pretrained_net
         self.relu = nn.ReLU(inplace=True)
@@ -195,7 +195,7 @@ ranges = {
 cfg = {
     'vgg11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'vgg13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'vgg16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+    'vgg16': [64, 64, 'M', 128, 128, 'M', 256,256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'vgg19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
 
