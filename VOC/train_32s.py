@@ -24,7 +24,7 @@ configurations = {
         lr=1.0e-10,
         momentum=0.99,
         weight_decay=0.0005,
-        interval_validate=2, #originally 4000
+        interval_validate=1, #originally 4000
     )
 }
 
@@ -89,13 +89,13 @@ def main():
     parser.add_argument('-g', '--gpu', type=int, required=True)
     parser.add_argument('-c', '--config', type=int, default=1,
                         choices=configurations.keys())
-    parser.add_argument('--resume', type=bool)
+    parser.add_argument('--resume', type=int)
     args = parser.parse_args()
 
     gpu = args.gpu
     cfg = configurations[args.config]
     # out = get_log_dir('fcn32s', args.config, cfg)
-    resume = True
+    resume = (args.resume==1)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
     cuda = torch.cuda.is_available()
     torch.manual_seed(1337)
@@ -105,7 +105,7 @@ def main():
     # 1. dataset
 
     root = osp.expanduser('../pascal-voc')
-    kwargs = {'num_workers': 4, 'pin_memory': True} if cuda else {}
+    kwargs = {'num_workers': 8, 'pin_memory': True} if cuda else {}
     train_loader = torch.utils.data.DataLoader(
         VOCSegmentation(root, split = "train", transform=True),
         batch_size=1, shuffle=True, **kwargs)

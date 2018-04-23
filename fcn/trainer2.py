@@ -114,7 +114,7 @@ class Trainer(object):
                 enumerate(self.val_loader), total=len(self.val_loader),
                 desc='Valid iteration=%d' % self.iteration, ncols=80,
                 leave=False):
-            if batch_idx > 100:
+            if batch_idx > 1:
                 break
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -144,6 +144,11 @@ class Trainer(object):
 
         metrics = label_accuracy_score(
             label_trues, label_preds, n_class)
+	out = '.out/visualization_viz'
+        if not osp.exists(out):
+            os.makedirs(out)
+        out_file = osp.join(out, 'iter%012d.jpg' % self.iteration)
+        scipy.misc.imsave(out_file, fcn.utils.get_tile_image(visualizations))
 
         val_loss /= len(self.val_loader)
 
