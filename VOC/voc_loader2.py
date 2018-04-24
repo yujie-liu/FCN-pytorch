@@ -102,7 +102,6 @@ class VOCSegmentation(data.Dataset):
         # _target = mat['GTcls'][0]['Segmentation'][0].astype(np.int32)
         # _target[_target == 255] = -1
         if self._transform:
-            print("transform was not none")
             return self.transform(_img, _target)
 
         # todo(bdd) : perhaps transformations should be applied differently to masks?

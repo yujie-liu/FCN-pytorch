@@ -22,6 +22,13 @@ from models.vgg16 import VGGNet
 from trainer2 import Trainer
 from voc_loader2 import VOCSegmentation
 
+def _fast_hist(label_true, label_pred, n_class):
+    mask = (label_true >= 0) & (label_true < n_class)
+    hist = np.bincount(
+        n_class * label_true[mask].astype(int) +
+        label_pred[mask], minlength=n_class ** 2).reshape(n_class, n_class)
+    return hist
+
 def label_accuracy_score(label_trues, label_preds, n_class):
     """Returns accuracy score evaluation result.
 
@@ -43,13 +50,14 @@ def label_accuracy_score(label_trues, label_preds, n_class):
     return acc, acc_cls, mean_iu, fwavacc
 
 def main():
-    parser = argparse.ArgumentParser()
+    #parser = argparse.ArgumentParser()
     #parser.add_argument('model_file', help='Model path')
-    model_file = './pth/FCN32s.pth'
-    parser.add_argument('-g', '--gpu', type=int, default=0)
-    args = parser.parse_args()
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+    #parser.add_argument('-g', '--gpu', type=int, default=0)
+    #args = parser.parse_args()
+    model_file = './pth/FCN32s.pth'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+#    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 #    model_file = args.model_file
 
     root = osp.expanduser('../pascal-voc')

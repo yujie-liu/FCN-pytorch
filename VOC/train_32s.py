@@ -10,12 +10,17 @@ import yaml
 
 import fcn
 import sys
-sys.path.insert(0,'../fcn/')
+
+sys.path.insert(0, '../fcn/')
 import models
 from models.fcn32s import FCN32s
 from models.vgg16 import VGGNet
 from trainer2 import Trainer
 from voc_loader2 import VOCSegmentation
+import sys
+import warnings
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
 configurations = {
     # same configuration as original work
     # https://github.com/shelhamer/fcn.berkeleyvision.org
@@ -24,7 +29,7 @@ configurations = {
         lr=1.0e-10,
         momentum=0.99,
         weight_decay=0.0005,
-        interval_validate=1, #originally 4000
+        interval_validate=10,  # originally 4000
     )
 }
 
@@ -95,7 +100,7 @@ def main():
     gpu = args.gpu
     cfg = configurations[args.config]
     # out = get_log_dir('fcn32s', args.config, cfg)
-    resume = (args.resume==1)
+    resume = (args.resume == 1)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
     cuda = torch.cuda.is_available()
     torch.manual_seed(1337)
@@ -107,7 +112,7 @@ def main():
     root = osp.expanduser('../pascal-voc')
     kwargs = {'num_workers': 8, 'pin_memory': True} if cuda else {}
     train_loader = torch.utils.data.DataLoader(
-        VOCSegmentation(root, split = "train", transform=True),
+        VOCSegmentation(root, split="train", transform=True),
         batch_size=1, shuffle=True, **kwargs)
     val_loader = torch.utils.data.DataLoader(
         VOCSegmentation(
@@ -116,15 +121,18 @@ def main():
 
     # 2. model
     vgg16 = VGGNet(pretrained=True)
-    model = FCN32s(n_class=21, pretrained_net = vgg16)
+    model = FCN32s(n_class=21, pretrained_net=vgg16)
     start_epoch = 0
     start_iteration = 0
+    pretrained =True
+    if pretrained:
+        model.load_my_state_dict('./fcn32s_from_caffe.pth')
     if resume:
-        checkpoint = torch.load("./pth/FCN32s.pth")
+        checkpoint = torch.load("./pth/FCN32s-0.pth")
         model.load_state_dict(checkpoint['model_state_dict'])
         start_epoch = checkpoint['epoch']
         start_iteration = checkpoint['iteration']
-    # else:
+        # else:
 
         # model.copy_params_from_vgg16(vgg16)
     if cuda:

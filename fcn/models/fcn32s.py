@@ -70,3 +70,14 @@ class FCN32s(nn.Module):
         h = self.upscore(h)
         h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
         return h  # size=(N, n_class, x.H/1, x.W/1)
+
+    def load_my_state_dict(self, model_pth):
+        model_dict = self.state_dict()
+        pretrained_dict = torch.load(model_pth)
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        # 2. overwrite entries in the existing state dict
+        for k, v in pretrained_dict.items():
+            print(k)
+        model_dict.update(pretrained_dict)
+        # 3. load the new state dict
+        self.load_state_dict(model_dict)

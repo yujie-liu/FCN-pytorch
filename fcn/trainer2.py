@@ -114,7 +114,7 @@ class Trainer(object):
                 enumerate(self.val_loader), total=len(self.val_loader),
                 desc='Valid iteration=%d' % self.iteration, ncols=80,
                 leave=False):
-            if batch_idx > 1:
+            if batch_idx > 10:
                 break
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -132,7 +132,6 @@ class Trainer(object):
 
 
             for img, lt, lp in zip(imgs, lbl_true, lbl_pred):
-
                 img, lt = self.val_loader.dataset.untransform(img, lt)
                 label_trues.append(lt)
                 label_preds.append(lp)
@@ -140,11 +139,9 @@ class Trainer(object):
                     viz = fcn.utils.visualize_segmentation(
                         lbl_pred=lp, lbl_true=lt, img=img, n_class=n_class)
                     visualizations.append(viz)
-
-
         metrics = label_accuracy_score(
             label_trues, label_preds, n_class)
-	out = '.out/visualization_viz'
+        out = '.out/visualization_viz'
         if not osp.exists(out):
             os.makedirs(out)
         out_file = osp.join(out, 'iter%012d.jpg' % self.iteration)
@@ -157,8 +154,9 @@ class Trainer(object):
         if is_best:
             self.best_mean_iu = mean_iu
         # self.out += "-%d.pth" % (self.epoch + 1)
-        # if not os.path.exists("./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch)):
-        #     with open("./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch), 'w+'):pass
+        model_log = "./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch)
+        if not os.path.exists(model_log):
+            with open(model_log, 'w+'):pass
         torch.save({
             'epoch': self.epoch,
             'iteration': self.iteration,
@@ -166,7 +164,7 @@ class Trainer(object):
             'optim_state_dict': self.optim.state_dict(),
             'model_state_dict': self.model.state_dict(),
             'best_mean_iu': self.best_mean_iu,
-        }, "./pth/%s.pth" % self.model.__class__.__name__)
+        }, model_log)
 
         if training:
             self.model.train()
