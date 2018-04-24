@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, '../fcn/')
 import models
 from models.fcn32s import FCN32s
-from models.vgg16 import VGGNet
+from models.vgg import VGG
 from trainer2 import Trainer
 from voc_loader2 import VOCSegmentation
 import sys
@@ -120,21 +120,20 @@ def main():
         batch_size=1, shuffle=False, **kwargs)
 
     # 2. model
-    vgg16 = VGGNet(pretrained=True)
-    model = FCN32s(n_class=21, pretrained_net=vgg16)
+    model = FCN32s(n_class=21)
     start_epoch = 0
     start_iteration = 0
     pretrained =True
     if pretrained:
-        model.load_my_state_dict('./fcn32s_from_caffe.pth')
+        model.load_state_dict('./fcn32s_from_caffe.pth')
     if resume:
         checkpoint = torch.load("./pth/FCN32s-0.pth")
         model.load_state_dict(checkpoint['model_state_dict'])
         start_epoch = checkpoint['epoch']
         start_iteration = checkpoint['iteration']
-        # else:
-
-        # model.copy_params_from_vgg16(vgg16)
+    # else:
+    #     vgg16 = VGG16(pretrained=True)
+    #     model.copy_params_from_vgg16(vgg16)
     if cuda:
         model = model.cuda()
 
