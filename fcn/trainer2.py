@@ -114,7 +114,7 @@ class Trainer(object):
                 enumerate(self.val_loader), total=len(self.val_loader),
                 desc='Valid iteration=%d' % self.iteration, ncols=80,
                 leave=False):
-            if batch_idx > 10:
+            if batch_idx > 1:
                 break
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
@@ -233,7 +233,6 @@ class Trainer(object):
 
     def train(self):
         max_epoch = int(math.ceil(1. * self.max_iter / len(self.train_loader)))
-        print(max_epoch)
         for epoch in tqdm.trange(self.epoch, max_epoch,
                                  desc='Train', ncols=80):
             self.epoch = epoch

@@ -59,7 +59,7 @@ def main():
     #parser.add_argument('model_file', help='Model path')
     parser.add_argument('-g', '--gpu', type=int, default=0)
     args = parser.parse_args()
-    model_file = './pth/FCN32s_RES-0.pth'
+    model_file = './pth/ResNet-0.pth'
 #    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 #    model_file = args.model_file
@@ -72,8 +72,7 @@ def main():
         num_workers=4, pin_memory=True)
 
     n_class = len(val_loader.dataset.CLASSES)
-    res = resnet34(pretrained=True)
-    model = FCN32s_RES(n_class=21, pretrained_net=res)
+    model = FCN32s_RES(n_class=21)
 
 #    if osp.basename(model_file).startswith('fcn32s'):
 #       model = FCN32s(n_class=21, pretrained_net=vgg16)
@@ -88,7 +87,6 @@ def main():
 #    else:
 #        raise ValueError
     if torch.cuda.is_available():
-        print('yassss')
         model = model.cuda()
     print('==> Loading %s model file: %s' %
           (model.__class__.__name__, model_file))

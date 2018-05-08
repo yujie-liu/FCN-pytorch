@@ -71,7 +71,6 @@ def get_parameters(model, bias=False):
         nn.MaxPool2d,
         nn.Dropout2d,
         nn.Sequential,
-        FCN32s_RES,
 	BasicBlock,
 	Bottleneck,
 	nn.BatchNorm2d,
@@ -80,7 +79,7 @@ def get_parameters(model, bias=False):
 	ResNet
     )
     for m in model.modules():
-        if isinstance(m, nn.Conv2d):
+	if isinstance(m, nn.Conv2d):
             if bias:
                 yield m.bias
             else:
@@ -89,7 +88,7 @@ def get_parameters(model, bias=False):
             # weight is frozen because it is just a bilinear upsampling
             if bias:
                 assert m.bias is None
-        elif isinstance(m, modules_skipped):
+	elif isinstance(m, modules_skipped):
             continue
         else:
             raise ValueError('Unexpected module: %s' % str(m))
@@ -128,11 +127,10 @@ def main():
         batch_size=1, shuffle=False, **kwargs)
 
     # 2. model
-    res = resnet34(pretrained=True)
-    model = FCN32s_RES(n_class=21, pretrained_net=res)
+    model = FCN32s_RES(n_class=21)
     start_epoch = 0
     start_iteration = 0
-    pretrained =True
+    pretrained = False
     if pretrained:
         model.load_my_state_dict('./fcn32s_from_caffe.pth')
     if resume:
@@ -148,16 +146,17 @@ def main():
 
     # 3. optimizer
 
-    param = get_parameters(model, bias=False)
-    param1 = [x for x in param if x.requires_grad]
-    param2 = get_parameters(model, bias=True)
-    param2 = [x for x in param if x is not None and x.requires_grad]
+    #param = get_parameters(model, bias=False)
+    #param1 = [x for x in param if x.requires_grad]
+    #param2 = get_parameters(model, bias=True)
+    #param2 = [x for x in param if x is not None and x.requires_grad]
     optim = torch.optim.SGD(
-        [
-            {'params': param1},
-            {'params': param2,
-             'lr': cfg['lr'] * 2, 'weight_decay': 0},
-        ],
+        model.parameters(),
+	#[
+            #{'params': param1},
+            #{'params': param2,
+            # 'lr': cfg['lr'] * 2, 'weight_decay': 0},
+        #],
         lr=cfg['lr'],
         momentum=cfg['momentum'],
         weight_decay=cfg['weight_decay'])
