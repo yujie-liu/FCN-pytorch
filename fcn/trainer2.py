@@ -114,8 +114,8 @@ class Trainer(object):
                 enumerate(self.val_loader), total=len(self.val_loader),
                 desc='Valid iteration=%d' % self.iteration, ncols=80,
                 leave=False):
-            if batch_idx > 1:
-                break
+            #if batch_idx > 1:
+             #   break
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
