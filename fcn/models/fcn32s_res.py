@@ -24,6 +24,13 @@ def get_upsampling_weight(in_channels, out_channels, kernel_size):
 
 __all__ = ['ResNet', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
+model_urls = {
+    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
+    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
+    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
+    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+}
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -118,7 +125,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
-        self.fc = nn.Linear(512 * block.expansion, n_class)
+        #self.fc = nn.Linear(512 * block.expansion, n_class)
         # fc6
         self.fc6 = nn.Conv2d(512, 4096, 7)
         self.relu6 = nn.ReLU(inplace=True)
@@ -171,38 +178,36 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-	print(x.shape)
         h = self.pad_layer(x)
         h = self.conv1(h)
         h = self.bn1(h)
         h = self.relu(h)
         h = self.maxpool(h)
-	print(x.shape)
         h = self.layer1(h)
         h = self.layer2(h)
         h = self.layer3(h)
         h = self.layer4(h)
 
-	print(x.shape)
         #x = self.avgpool(x)
-	print(x.shape)
         #h = x.view(x.size(0), -1)
         h = self.relu6(self.fc6(h))
         h = self.drop6(h)
-	print(x.shape)
-
         h = self.relu7(self.fc7(h))
         h = self.drop7(h)
-
         h = self.score_fr(h)
-
         h = self.upscore(h)
-	print(x.shape)
         h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
-
-	print(x.shape)
         return h
 
+    def load_my_state_dict(self, pretrained_model):
+	own_state = self.state_dict()
+        for name, param in pretrained_model.items():
+            print(name)
+	    if name not in own_state:
+                 continue
+            if isinstance(param, nn.Parameter):
+                param = param.data
+            own_state[name].copy_(param)
 
 def FCN32s_RES(pretrained=False, **kwargs):
     """Constructs a ResNet-34 model.
@@ -210,6 +215,11 @@ def FCN32s_RES(pretrained=False, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+	model.load_my_state_dict(model_zoo.load_url(model_urls['resnet34']))
+	path = osp.join(osp.dirname(__file__), '..','..','VOC/fcn32s_from_caffe.pth')
+	path = osp.abspath(path)
+	model.load_my_state_dict(torch.load(path))
     return model
 
 

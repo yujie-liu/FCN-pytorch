@@ -127,12 +127,12 @@ def main():
         batch_size=1, shuffle=False, **kwargs)
 
     # 2. model
-    model = FCN32s_RES(n_class=21)
+    model = FCN32s_RES(n_class=21, pretrained=True)
     start_epoch = 0
     start_iteration = 0
-    pretrained = False
-    if pretrained:
-        model.load_my_state_dict('./fcn32s_from_caffe.pth')
+    #pretrained = False
+    #if pretrained:
+        #model.load_my_state_dict('./fcn32s_from_caffe.pth')
     if resume:
         checkpoint = torch.load("./pth/FCN32s-0.pth")
         model.load_state_dict(checkpoint['model_state_dict'])
