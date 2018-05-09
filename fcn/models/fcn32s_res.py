@@ -6,6 +6,7 @@ import os.path as osp
 import fcn
 import numpy as np
 
+
 # https://github.com/shelhamer/fcn.berkeleyvision.org/blob/master/surgery.py
 def get_upsampling_weight(in_channels, out_channels, kernel_size):
     """Make a 2D bilinear kernel suitable for upsampling"""
@@ -22,6 +23,7 @@ def get_upsampling_weight(in_channels, out_channels, kernel_size):
     weight[range(in_channels), range(out_channels), :, :] = filt
     return torch.from_numpy(weight).float()
 
+
 __all__ = ['ResNet', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
 model_urls = {
@@ -31,6 +33,7 @@ model_urls = {
     'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
+
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -125,7 +128,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
-        #self.fc = nn.Linear(512 * block.expansion, n_class)
+        # self.fc = nn.Linear(512 * block.expansion, n_class)
         # fc6
         self.fc6 = nn.Conv2d(512, 4096, 7)
         self.relu6 = nn.ReLU(inplace=True)
@@ -140,14 +143,14 @@ class ResNet(nn.Module):
         self.upscore = nn.ConvTranspose2d(n_class, n_class, 64, stride=32, bias=False)
 
         self._initialize_weights()
- 
+
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal(m.weight, mode='fan_out')
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant(m.weight, 1)
                 nn.init.constant(m.bias, 0)
-       
+
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -159,7 +162,7 @@ class ResNet(nn.Module):
                 initial_weight = get_upsampling_weight(
                     m.in_channels, m.out_channels, m.kernel_size[0])
                 m.weight.data.copy_(initial_weight)
-        
+
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
@@ -188,8 +191,8 @@ class ResNet(nn.Module):
         h = self.layer3(h)
         h = self.layer4(h)
 
-        #x = self.avgpool(x)
-        #h = x.view(x.size(0), -1)
+        # x = self.avgpool(x)
+        # h = x.view(x.size(0), -1)
         h = self.relu6(self.fc6(h))
         h = self.drop6(h)
         h = self.relu7(self.fc7(h))
@@ -200,14 +203,15 @@ class ResNet(nn.Module):
         return h
 
     def load_my_state_dict(self, pretrained_model):
-	own_state = self.state_dict()
+        own_state = self.state_dict()
         for name, param in pretrained_model.items():
             print(name)
-	    if name not in own_state:
-                 continue
+            if name not in own_state:
+                continue
             if isinstance(param, nn.Parameter):
                 param = param.data
             own_state[name].copy_(param)
+
 
 def FCN32s_RES(pretrained=False, **kwargs):
     """Constructs a ResNet-34 model.
@@ -216,10 +220,10 @@ def FCN32s_RES(pretrained=False, **kwargs):
     """
     model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-	model.load_my_state_dict(model_zoo.load_url(model_urls['resnet34']))
-	path = osp.join(osp.dirname(__file__), '..','..','VOC/fcn32s_from_caffe.pth')
-	path = osp.abspath(path)
-	model.load_my_state_dict(torch.load(path))
+        model.load_my_state_dict(model_zoo.load_url(model_urls['resnet34']))
+        path = osp.join(osp.dirname(__file__), '..', '..', 'VOC/fcn32s_from_caffe.pth')
+        path = osp.abspath(path)
+        model.load_my_state_dict(torch.load(path))
     return model
 
 
@@ -248,4 +252,3 @@ def resnet152(pretrained=False, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
     return model
-

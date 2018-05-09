@@ -33,7 +33,7 @@ configurations = {
         lr=1.0e-10,
         momentum=0.99,
         weight_decay=0.0005,
-        interval_validate=10,  # originally 4000
+        interval_validate=4000,  # originally 4000
     )
 }
 
@@ -71,15 +71,15 @@ def get_parameters(model, bias=False):
         nn.MaxPool2d,
         nn.Dropout2d,
         nn.Sequential,
-	BasicBlock,
-	Bottleneck,
-	nn.BatchNorm2d,
-	nn.AvgPool2d,
-	nn.Linear,
-	ResNet
+        BasicBlock,
+        Bottleneck,
+        nn.BatchNorm2d,
+        nn.AvgPool2d,
+        nn.Linear,
+        ResNet
     )
     for m in model.modules():
-	if isinstance(m, nn.Conv2d):
+	    if isinstance(m, nn.Conv2d):
             if bias:
                 yield m.bias
             else:
