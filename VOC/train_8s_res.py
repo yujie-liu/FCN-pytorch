@@ -14,7 +14,6 @@ import sys
 sys.path.insert(0, '../fcn/')
 import models
 from models.fcn_res import FCN32s_RES, FCN8s_RES
-from models.resnet import resnet34
 from models.resnet import BasicBlock
 from models.resnet import Bottleneck
 from models.resnet import ResNet
@@ -33,7 +32,7 @@ configurations = {
         lr=1.0e-4,
         momentum=0.99,
         weight_decay=0.0005,
-        interval_validate=1000,  # originally 4000
+        interval_validate=100,  # originally 4000
     )
 }
 
@@ -130,13 +129,13 @@ def main():
 
     start_epoch = 0
     start_iteration = 0
-    model = FCN32s_RES(n_class=21, pretrained=True)
+    model = FCN8s_RES(n_class=21, pretrained=True)
     #pretrained = False
     #if pretrained:
         #model.load_my_state_dict('./fcn32s_from_caffe.pth')
     if resume:
-        model = FCN32s_RES(n_class=21)
-        checkpoint = torch.load("./pth/ResNet32s-2.pth")
+        model = FCN8s_RES(n_class=21)
+        checkpoint = torch.load("./pth/ResNet8s.pth")
         model.load_state_dict(checkpoint['model_state_dict'])
         start_epoch = checkpoint['epoch']
         start_iteration = checkpoint['iteration']

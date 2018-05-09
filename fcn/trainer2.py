@@ -15,8 +15,8 @@ import torch.nn.functional as F
 import tqdm
 import sys
 sys.path.insert(0,'../fcn/')
-import models
-from models import vgg16, fcn32s
+# import models
+# from models import vgg16, fcn32s
 
 def cross_entropy2d(input, target, weight=None, size_average=True):
     # input: (n, c, h, w), target: (n, h, w)
@@ -130,7 +130,6 @@ class Trainer(object):
             lbl_pred = score.data.max(1)[1].cpu().numpy()[:, :, :]
             lbl_true = target.data.cpu()
 
-
             for img, lt, lp in zip(imgs, lbl_true, lbl_pred):
                 img, lt = self.val_loader.dataset.untransform(img, lt)
                 label_trues.append(lt)
@@ -153,6 +152,14 @@ class Trainer(object):
         is_best = mean_iu > self.best_mean_iu
         if is_best:
             self.best_mean_iu = mean_iu
+            torch.save({
+                'epoch': self.epoch,
+                'iteration': self.iteration,
+                'arch': self.model.__class__.__name__,
+                'optim_state_dict': self.optim.state_dict(),
+                'model_state_dict': self.model.state_dict(),
+                'best_mean_iu': self.best_mean_iu,
+            }, "./pth/%s.pth" % self.model.__class__.__name__)
         # self.out += "-%d.pth" % (self.epoch + 1)
         model_log = "./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch)
         if not os.path.exists(model_log):
@@ -201,24 +208,6 @@ class Trainer(object):
                 raise ValueError('loss is nan while training')
             loss.backward()
             self.optim.step()
-
-            # metrics = []
-            # lbl_pred = score.data.max(1)[1].cpu().numpy()[:, :, :]
-            # lbl_true = target.data.cpu().numpy()
-            # acc, acc_cls, mean_iu, fwavacc = \
-            #     torchfcn.utils.label_accuracy_score(
-            #         lbl_true, lbl_pred, n_class=n_class)
-            # metrics.append((acc, acc_cls, mean_iu, fwavacc))
-            # metrics = np.mean(metrics, axis=0)
-            #
-            # with open(osp.join(self.out, 'log.csv'), 'a') as f:
-            #     elapsed_time = (
-            #             datetime.datetime.now(pytz.timezone('Asia/Tokyo')) -
-            #             self.timestamp_start).total_seconds()
-            #     log = [self.epoch, self.iteration] + [loss.data[0]] + \
-            #           metrics.tolist() + [''] * 5 + [elapsed_time]
-            #     log = map(str, log)
-            #     f.write(','.join(log) + '\n')
             torch.save({
                 'epoch': self.epoch,
                 'iteration': self.iteration,
@@ -229,7 +218,6 @@ class Trainer(object):
             }, "./pth/%s.pth" % self.model.__class__.__name__)
             if self.iteration >= self.max_iter:
                 break
-
 
     def train(self):
         max_epoch = int(math.ceil(1. * self.max_iter / len(self.train_loader)))

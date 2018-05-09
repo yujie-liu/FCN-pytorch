@@ -15,16 +15,7 @@ import fcn
 import sys
 sys.path.insert(0,'../fcn/')
 import models
-from models.fcn32s_res import FCN32s_RES
-from models.resnet import resnet34
-from models.resnet import BasicBlock
-from models.resnet import Bottleneck
-from models.resnet import ResNet
-#rom models.fcn32s_res import FCN32s_RES
-#from models.fcn16s import FCN16s
-#from models.fcn8s import FCN8s
-from models.vgg16 import VGGNet
-from trainer2 import Trainer
+from models.fcn_res import FCN32s_RES
 from voc_loader2 import VOCSegmentation
 
 def _fast_hist(label_true, label_pred, n_class):
@@ -59,7 +50,7 @@ def main():
     #parser.add_argument('model_file', help='Model path')
     parser.add_argument('-g', '--gpu', type=int, default=0)
     args = parser.parse_args()
-    model_file = './pth/ResNet-0.pth'
+    model_file = './pth/ResNet32s.pth'
 #    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 #    model_file = args.model_file

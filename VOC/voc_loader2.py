@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import errno
-import hashlib
+import argparse
 import os
 import sys
 import tarfile
@@ -33,7 +33,6 @@ class VOCSegmentation(data.Dataset):
         img = img.transpose(2, 0, 1)
         img = torch.from_numpy(img).float()
         lbl = torch.from_numpy(lbl).long()
-        #print(img.shape)
         return img, lbl
 
     def untransform(self, img, lbl):
@@ -84,7 +83,6 @@ class VOCSegmentation(data.Dataset):
         assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index):
-        print(index)
         _img = Image.open(self.images[index])
         _target = Image.open(self.masks[index])
         if _img.size[0] <= 224:
@@ -133,11 +131,6 @@ class VOCSegmentation(data.Dataset):
         if not os.path.isfile(_fpath):
             print("{} does not exist".format(_fpath))
             return False
-        # md5c = hashlib.md5(open(_fpath, 'rb').read()).hexdigest()
-        # if _md5c != self.MD5:
-        #     print(" MD5({}) did not match MD5({}) expected for {}".format(
-        #         _md5c, self.MD5, _fpath))
-        #     return False
         return True
 
     def _download(self):
@@ -177,5 +170,8 @@ class VOCSegmentation(data.Dataset):
 
 
 if __name__ == '__main__':
-    pascal = VOCSegmentation('../pascal-voc', download=False)
-    print(pascal[3])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--download', type=int, default=0)
+    args = parser.parse_args()
+    download = args.download
+    pascal = VOCSegmentation('../pascal-voc', download)
