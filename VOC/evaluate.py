@@ -4,22 +4,17 @@
 import argparse
 import os
 import os.path as osp
-
-import numpy as np
 import skimage.io
+import numpy as np
 import torch
-from torch.autograd import Variable
-import fcn
+import sys
 import tqdm
 import fcn
-import sys
+from torch.autograd import Variable
 sys.path.insert(0,'../fcn/')
-import models
-from models.fcn32s import FCN32s
-#from models.fcn16s import FCN16s
-#from models.fcn8s import FCN8s
+from models.fcn32s import FCN32s, FCN16s, FCN8s
+from models.fcn_res import FCN32s_RES, FCN16s_RES, FCN8s_RES
 from models.vgg16 import VGGNet
-from trainer2 import Trainer
 from voc_loader2 import VOCSegmentation
 
 def _fast_hist(label_true, label_pred, n_class):
@@ -50,15 +45,14 @@ def label_accuracy_score(label_trues, label_preds, n_class):
     return acc, acc_cls, mean_iu, fwavacc
 
 def main():
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument('model_file', help='Model path')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('model', help='Model')
 
-    #parser.add_argument('-g', '--gpu', type=int, default=0)
-    #args = parser.parse_args()
-    model_file = './pth/FCN32s.pth'
+    parser.add_argument('-g', '--gpu', type=int, default=0)
+    args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
-#    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-#    model_file = args.model_file
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+    model_file = './pth/' + args.model_file + '.pth'
 
     root = osp.expanduser('../pascal-voc')
     val_loader = torch.utils.data.DataLoader(
@@ -69,19 +63,20 @@ def main():
 
     n_class = len(val_loader.dataset.CLASSES)
     vgg16 = VGGNet(pretrained=True)
-    model = FCN32s(n_class=21, pretrained_net=vgg16)
-#    if osp.basename(model_file).startswith('fcn32s'):
-#       model = FCN32s(n_class=21, pretrained_net=vgg16)
-#    elif osp.basename(model_file).startswith('fcn16s'):
-#        model = FCN16s(n_class=21, pretrained_net=vgg16)
-#    elif osp.basename(model_file).startswith('fcn8s'):
-        # if osp.basename(model_file).startswith('fcn8s-atonce'):
-        #     model = FCN8sAtOnce(n_class=21)
-        # else:
-        #     model = FCN8s(n_class=21, pretrained_net=vgg16)
-#        model = FCN8s(n_class=21, pretrained_net=vgg16)
-#    else:
-#        raise ValueError
+    if osp.basename(model_file).startswith('fcn32s'):
+       model = FCN32s(n_class=21)
+    elif osp.basename(model_file).startswith('fcn16s'):
+        model = FCN16s(n_class=21)
+    elif osp.basename(model_file).startswith('fcn8s'):
+        model = FCN8s(n_class=21)
+    elif osp.basename(model_file).startswith('FCN32s_RES'):
+        model = FCN32s_RES(n_class=21)
+    elif osp.basename(model_file).startswith('FCN16s_RES'):
+        model = FCN16s_RES(n_class=21)
+    elif osp.basename(model_file).startswith('FCN8s_RES'):
+        model = FCN8s_RES(n_class=21)
+    else:
+       raise ValueError
     if torch.cuda.is_available():
         model = model.cuda()
     print('==> Loading %s model file: %s' %

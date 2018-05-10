@@ -223,6 +223,7 @@ def FCN32s_RES(pretrained=False, **kwargs):
         model.load_my_state_dict(torch.load(path))
     return model
 
+
 class ResNet8s(nn.Module):
     def __init__(self, block, layers, n_class=21):
         self.inplanes = 64
@@ -351,6 +352,134 @@ def FCN8s_RES(pretrained=False, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = ResNet8s(BasicBlock, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+        model.load_my_state_dict(model_zoo.load_url(model_urls['resnet34']))
+        path = osp.join(osp.dirname(__file__), '..', '..', 'VOC/fcn32s_from_caffe.pth')
+        path = osp.abspath(path)
+        model.load_my_state_dict(torch.load(path))
+    return model
+
+
+class ResNet16s(nn.Module):
+    def __init__(self, block, layers, n_class=21):
+        self.inplanes = 64
+        super(ResNet16s, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
+                               bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.pad_layer = nn.ZeroPad2d(100)
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        # self.fc = nn.Linear(512 * block.expansion, n_class)
+        # fc6
+        self.fc6 = nn.Conv2d(512, 4096, 7)
+        self.relu6 = nn.ReLU(inplace=True)
+        self.drop6 = nn.Dropout2d()
+
+        # fc7
+        self.fc7 = nn.Conv2d(4096, 4096, 1)
+        self.relu7 = nn.ReLU(inplace=True)
+        self.drop7 = nn.Dropout2d()
+
+        self.score_fr = nn.Conv2d(4096, n_class, 1)
+        self.score_4 = nn.Conv2d(512, n_class, 1)
+
+        self.upscore2 = nn.ConvTranspose2d(
+            n_class, n_class, 4, stride=2, bias=False)
+        self.upscore8 = nn.ConvTranspose2d(
+            n_class, n_class, 16, stride=8, bias=False)
+        self.upscore16 = nn.ConvTranspose2d(
+            n_class, n_class, 32, stride=16, bias=False)
+        self.upscore_pool = nn.ConvTranspose2d(
+            n_class, n_class, 4, stride=2, bias=False)
+        self._initialize_weights()
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal(m.weight, mode='fan_out')
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant(m.weight, 1)
+                nn.init.constant(m.bias, 0)
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                m.weight.data.zero_()
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            if isinstance(m, nn.ConvTranspose2d):
+                assert m.kernel_size[0] == m.kernel_size[1]
+                initial_weight = get_upsampling_weight(
+                    m.in_channels, m.out_channels, m.kernel_size[0])
+                m.weight.data.copy_(initial_weight)
+
+    def _make_layer(self, block, planes, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        h = self.pad_layer(x)
+        h = self.conv1(h)
+        h = self.bn1(h)
+        h = self.relu(h)
+        h = self.maxpool(h)
+        h = self.layer1(h)
+        h = self.layer2(h)
+        h = self.layer3(h)
+        h = self.layer4(h)
+        h_4 = self.score_4(h*0.01)
+        # x = self.avgpool(x)
+        # h = x.view(x.size(0), -1)
+        h = self.relu6(self.fc6(h))
+        h = self.drop6(h)
+
+        h = self.relu7(self.fc7(h))
+        h = self.drop7(h)
+
+        h = self.score_fr(h)
+        upscore_2 = h  # 1/16
+        h = h_4
+        h = h[:, :, 5:5 + upscore_2.size()[2], 5:5 + upscore_2.size()[3]]
+        score_4c = h  # 1/16
+        h = upscore_2 + score_4c  # 1/16
+        h = self.upscore16(h)
+        h = h[:, :, 27:27 + x.size()[2], 27:27 + x.size()[3]].contiguous()
+
+        return h
+
+    def load_my_state_dict(self, pretrained_model):
+        own_state = self.state_dict()
+        for name, param in pretrained_model.items():
+            if name not in own_state:
+                continue
+            if isinstance(param, nn.Parameter):
+                param = param.data
+            own_state[name].copy_(param)
+
+
+def FCN16s_RES(pretrained=False, **kwargs):
+    """Constructs a ResNet-34 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = ResNet16s(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
         model.load_my_state_dict(model_zoo.load_url(model_urls['resnet34']))
         path = osp.join(osp.dirname(__file__), '..', '..', 'VOC/fcn32s_from_caffe.pth')
