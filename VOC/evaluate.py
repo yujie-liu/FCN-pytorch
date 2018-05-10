@@ -12,7 +12,9 @@ import tqdm
 import fcn
 from torch.autograd import Variable
 sys.path.insert(0,'../fcn/')
-from models.fcn32s import FCN32s, FCN16s, FCN8s
+from models.fcn32s import FCN32s
+from models.fcn16s import FCN16s
+from models.fcn8s import FCN8s
 from models.fcn_res import FCN32s_RES, FCN16s_RES, FCN8s_RES
 from models.vgg16 import VGGNet
 from voc_loader2 import VOCSegmentation
@@ -50,9 +52,8 @@ def main():
 
     parser.add_argument('-g', '--gpu', type=int, default=0)
     args = parser.parse_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-    model_file = './pth/' + args.model_file + '.pth'
+    model_file = './pth/' + args.model + '.pth'
 
     root = osp.expanduser('../pascal-voc')
     val_loader = torch.utils.data.DataLoader(
@@ -63,11 +64,11 @@ def main():
 
     n_class = len(val_loader.dataset.CLASSES)
     vgg16 = VGGNet(pretrained=True)
-    if osp.basename(model_file).startswith('fcn32s'):
+    if osp.basename(model_file).startswith('FCN32s'):
        model = FCN32s(n_class=21)
-    elif osp.basename(model_file).startswith('fcn16s'):
+    elif osp.basename(model_file).startswith('FCN16s'):
         model = FCN16s(n_class=21)
-    elif osp.basename(model_file).startswith('fcn8s'):
+    elif osp.basename(model_file).startswith('FCN8s'):
         model = FCN8s(n_class=21)
     elif osp.basename(model_file).startswith('FCN32s_RES'):
         model = FCN32s_RES(n_class=21)
