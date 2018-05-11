@@ -1,5 +1,4 @@
 # Evaluate the FCN accuracy
-#!/usr/bin/env python
 
 import argparse
 import os
@@ -63,7 +62,6 @@ def main():
         num_workers=4, pin_memory=True)
 
     n_class = len(val_loader.dataset.CLASSES)
-    vgg16 = VGGNet(pretrained=True)
     if osp.basename(model_file).startswith('FCN32s'):
        model = FCN32s(n_class=21)
     elif osp.basename(model_file).startswith('FCN16s'):

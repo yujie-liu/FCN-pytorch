@@ -13,6 +13,7 @@ import numpy as np
 import scipy
 import torchvision
 
+
 class VOCSegmentation(data.Dataset):
     CLASSES = [
         'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
@@ -20,10 +21,9 @@ class VOCSegmentation(data.Dataset):
         'motorbike', 'person', 'potted-plant', 'sheep', 'sofa', 'train',
         'tv/monitor', 'ambigious'
     ]
-    URL = "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar"
-    FILE = "VOCtrainval_06-Nov-2007.tar"
-    MD5 = '6cd6e144f989b92b3379bac3b3de84fd'
-    BASE_DIR = 'VOCdevkit/VOC2007'
+    URL = "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
+    FILE = "VOCtrainval_11-May-2012.tar"
+    BASE_DIR = 'VOCdevkit/VOC2012'
     mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
 
     def transform(self, img, lbl):
@@ -43,6 +43,7 @@ class VOCSegmentation(data.Dataset):
         img = img[:, :, ::-1]
         lbl = lbl.numpy()
         return img, lbl
+
     def __init__(self,
                  root,
                  split="train",
@@ -67,7 +68,7 @@ class VOCSegmentation(data.Dataset):
         _splits_dir = os.path.join(_voc_root, 'ImageSets/Segmentation')
         _split_f = os.path.join(_splits_dir, 'train.txt')
         if not self.split == "train":
-            _split_f = os.path.join(_splits_dir, 'val.txt') # trainval.txt
+            _split_f = os.path.join(_splits_dir, 'val.txt')  # trainval.txt
 
         self.images = []
         self.masks = []
@@ -96,32 +97,10 @@ class VOCSegmentation(data.Dataset):
         _img = np.array(_img, dtype=np.uint8)
         _target = np.array(_target, dtype=np.int32)
         _target[_target == 255] = -1
-        # mat = scipy.io.loadmat(self.masks[index])
-        # _target = mat['GTcls'][0]['Segmentation'][0].astype(np.int32)
-        # _target[_target == 255] = -1
         if self._transform:
             return self.transform(_img, _target)
 
-        # todo(bdd) : perhaps transformations should be applied differently to masks?
-        # if self.target_transform:
-        #     _target = self.untransform(_target)
-
         return _img, _target
-
-    # data_file = self.files[self.split][index]
-    # # load image
-    # img_file = data_file['img']
-    # img = PIL.Image.open(img_file)
-    # img = np.array(img, dtype=np.uint8)
-    # # load label
-    # lbl_file = data_file['lbl']
-    # mat = scipy.io.loadmat(lbl_file)
-    # lbl = mat['GTcls'][0]['Segmentation'][0].astype(np.int32)
-    # lbl[lbl == 255] = -1
-    # if self._transform:
-    #     return self.transform(img, lbl)
-    # else:
-    #     return img, lbl
 
     def __len__(self):
         return len(self.images)
@@ -158,7 +137,6 @@ class VOCSegmentation(data.Dataset):
 
             urllib.request.urlretrieve(self.URL, _fpath, _progress)
 
-        # extract file
         cwd = os.getcwd()
         print('Extracting tar file')
         tar = tarfile.open(_fpath)
@@ -166,7 +144,7 @@ class VOCSegmentation(data.Dataset):
         tar.extractall()
         tar.close()
         os.chdir(cwd)
-        print('Done!')
+        print('File extracted')
 
 
 if __name__ == '__main__':

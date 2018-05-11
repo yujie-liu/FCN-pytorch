@@ -126,7 +126,6 @@ class ResNet32s(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
-        # self.fc = nn.Linear(512 * block.expansion, n_class)
         # fc6
         self.fc6 = nn.Conv2d(512, 4096, 7)
         self.relu6 = nn.ReLU(inplace=True)
@@ -188,9 +187,6 @@ class ResNet32s(nn.Module):
         h = self.layer2(h)
         h = self.layer3(h)
         h = self.layer4(h)
-
-        # x = self.avgpool(x)
-        # h = x.view(x.size(0), -1)
         h = self.relu6(self.fc6(h))
         h = self.drop6(h)
         h = self.relu7(self.fc7(h))
@@ -238,7 +234,6 @@ class ResNet8s(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        # self.fc = nn.Linear(512 * block.expansion, n_class)
         # fc6
         self.fc6 = nn.Conv2d(512, 4096, 7)
         self.relu6 = nn.ReLU(inplace=True)
@@ -307,11 +302,9 @@ class ResNet8s(nn.Module):
         h = self.layer1(h)
         h = self.layer2(h)
         h = self.layer3(h)
-        h_3 = self.score_3(h*0.0001)
+        h_3 = self.score_3(h * 0.0001)
         h = self.layer4(h)
-        h_4 = self.score_4(h*0.01)
-        # x = self.avgpool(x)
-        # h = x.view(x.size(0), -1)
+        h_4 = self.score_4(h * 0.01)
         h = self.relu6(self.fc6(h))
         h = self.drop6(h)
 
@@ -326,7 +319,7 @@ class ResNet8s(nn.Module):
         h = upscore_2 + score_4c  # 1/16
         h = self.upscore2(h)
         upscore_4 = h  # 1/8
-        h = h_3  # XXX: scaling to train at once
+        h = h_3
         h = h[:, :, 9:9 + upscore_4.size()[2], 9:9 + upscore_4.size()[3]]
         score_3c = h  # 1/8
         h = upscore_4 + score_3c  # 1/8
@@ -374,7 +367,6 @@ class ResNet16s(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        # self.fc = nn.Linear(512 * block.expansion, n_class)
         # fc6
         self.fc6 = nn.Conv2d(512, 4096, 7)
         self.relu6 = nn.ReLU(inplace=True)
@@ -444,9 +436,7 @@ class ResNet16s(nn.Module):
         h = self.layer2(h)
         h = self.layer3(h)
         h = self.layer4(h)
-        h_4 = self.score_4(h*0.01)
-        # x = self.avgpool(x)
-        # h = x.view(x.size(0), -1)
+        h_4 = self.score_4(h * 0.01)
         h = self.relu6(self.fc6(h))
         h = self.drop6(h)
 
@@ -486,30 +476,3 @@ def FCN16s_RES(pretrained=False, **kwargs):
         path = osp.abspath(path)
         model.load_my_state_dict(torch.load(path))
     return model
-#
-#
-# def resnet50(pretrained=False, **kwargs):
-#     """Constructs a ResNet-50 model.
-#     Args:
-#         pretrained (bool): If True, returns a model pre-trained on ImageNet
-#     """
-#     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
-#     return model
-#
-#
-# def resnet101(pretrained=False, **kwargs):
-#     """Constructs a ResNet-101 model.
-#     Args:
-#         pretrained (bool): If True, returns a model pre-trained on ImageNet
-#     """
-#     model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
-#     return model
-#
-#
-# def resnet152(pretrained=False, **kwargs):
-#     """Constructs a ResNet-152 model.
-#     Args:
-#         pretrained (bool): If True, returns a model pre-trained on ImageNet
-#     """
-#     model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
-#     return model

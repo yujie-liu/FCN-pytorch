@@ -14,9 +14,11 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import tqdm
 import sys
-sys.path.insert(0,'../fcn/')
+
+sys.path.insert(0, '../fcn/')
 import models
 from models import vgg16, fcn32s
+
 
 def cross_entropy2d(input, target, weight=None, size_average=True):
     # input: (n, c, h, w), target: (n, h, w)
@@ -50,12 +52,6 @@ def _fast_hist(label_true, label_pred, n_class):
 
 
 def label_accuracy_score(label_trues, label_preds, n_class):
-    """Returns accuracy score evaluation result.
-      - overall accuracy
-      - mean accuracy
-      - mean IU
-      - fwavacc
-    """
     hist = np.zeros((n_class, n_class))
     for lt, lp in zip(label_trues, label_preds):
         hist += _fast_hist(lt.flatten(), lp.flatten(), n_class)
@@ -95,7 +91,7 @@ class Trainer(object):
             self.interval_validate = interval_validate
         if not os.path.exists("./pth/"):
             os.makedirs("./pth/")
-            with open("./pth/%s.pth" % self.model.__class__.__name__, 'w+'):pass
+            with open("./pth/%s.pth" % self.model.__class__.__name__, 'w+'): pass
         self.epoch = 0
         self.iteration = 0
         self.max_iter = max_iter
@@ -130,7 +126,6 @@ class Trainer(object):
             lbl_pred = score.data.max(1)[1].cpu().numpy()[:, :, :]
             lbl_true = target.data.cpu()
 
-
             for img, lt, lp in zip(imgs, lbl_true, lbl_pred):
 
                 img, lt = self.val_loader.dataset.untransform(img, lt)
@@ -141,7 +136,6 @@ class Trainer(object):
                         lbl_pred=lp, lbl_true=lt, img=img, n_class=n_class)
                     visualizations.append(viz)
 
-
         metrics = label_accuracy_score(
             label_trues, label_preds, n_class)
 
@@ -151,9 +145,6 @@ class Trainer(object):
         is_best = mean_iu > self.best_mean_iu
         if is_best:
             self.best_mean_iu = mean_iu
-        # self.out += "-%d.pth" % (self.epoch + 1)
-        # if not os.path.exists("./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch)):
-        #     with open("./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch), 'w+'):pass
         torch.save({
             'epoch': self.epoch,
             'iteration': self.iteration,
@@ -165,7 +156,6 @@ class Trainer(object):
 
         if training:
             self.model.train()
-
 
     def train_epoch(self):
         self.model.train()
@@ -198,24 +188,6 @@ class Trainer(object):
                 raise ValueError('loss is nan while training')
             loss.backward()
             self.optim.step()
-
-            # metrics = []
-            # lbl_pred = score.data.max(1)[1].cpu().numpy()[:, :, :]
-            # lbl_true = target.data.cpu().numpy()
-            # acc, acc_cls, mean_iu, fwavacc = \
-            #     torchfcn.utils.label_accuracy_score(
-            #         lbl_true, lbl_pred, n_class=n_class)
-            # metrics.append((acc, acc_cls, mean_iu, fwavacc))
-            # metrics = np.mean(metrics, axis=0)
-            #
-            # with open(osp.join(self.out, 'log.csv'), 'a') as f:
-            #     elapsed_time = (
-            #             datetime.datetime.now(pytz.timezone('Asia/Tokyo')) -
-            #             self.timestamp_start).total_seconds()
-            #     log = [self.epoch, self.iteration] + [loss.data[0]] + \
-            #           metrics.tolist() + [''] * 5 + [elapsed_time]
-            #     log = map(str, log)
-            #     f.write(','.join(log) + '\n')
             torch.save({
                 'epoch': self.epoch,
                 'iteration': self.iteration,
@@ -226,7 +198,6 @@ class Trainer(object):
             }, "./pth/%s.pth" % self.model.__class__.__name__)
             if self.iteration >= self.max_iter:
                 break
-
 
     def train(self):
         max_epoch = int(math.ceil(1. * self.max_iter / len(self.train_loader)))

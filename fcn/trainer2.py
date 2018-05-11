@@ -14,9 +14,9 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import tqdm
 import sys
-sys.path.insert(0,'../fcn/')
-# import models
-# from models import vgg16, fcn32s
+
+sys.path.insert(0, '../fcn/')
+
 
 def cross_entropy2d(input, target, weight=None, size_average=True):
     # input: (n, c, h, w), target: (n, h, w)
@@ -95,7 +95,7 @@ class Trainer(object):
             self.interval_validate = interval_validate
         if not os.path.exists("./pth/"):
             os.makedirs("./pth/")
-            with open("./pth/%s.pth" % self.model.__class__.__name__, 'w+'):pass
+            with open("./pth/%s.pth" % self.model.__class__.__name__, 'w+'): pass
         self.epoch = 0
         self.iteration = 0
         self.max_iter = max_iter
@@ -114,8 +114,8 @@ class Trainer(object):
                 enumerate(self.val_loader), total=len(self.val_loader),
                 desc='Valid iteration=%d' % self.iteration, ncols=80,
                 leave=False):
-            #if batch_idx > 1:
-             #   break
+            # if batch_idx > 1:
+            #   break
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
@@ -160,10 +160,9 @@ class Trainer(object):
                 'model_state_dict': self.model.state_dict(),
                 'best_mean_iu': self.best_mean_iu,
             }, "./pth/%s.pth" % self.model.__class__.__name__)
-        # self.out += "-%d.pth" % (self.epoch + 1)
         model_log = "./pth/%s-%d.pth" % (self.model.__class__.__name__, self.epoch)
         if not os.path.exists(model_log):
-            with open(model_log, 'w+'):pass
+            with open(model_log, 'w+'): pass
         torch.save({
             'epoch': self.epoch,
             'iteration': self.iteration,
@@ -175,7 +174,6 @@ class Trainer(object):
 
         if training:
             self.model.train()
-
 
     def train_epoch(self):
         self.model.train()
@@ -200,8 +198,6 @@ class Trainer(object):
             data, target = Variable(data), Variable(target)
             self.optim.zero_grad()
             score = self.model(data)
-            criterion = nn.BCEWithLogitsLoss()
-            # loss = criterion(score, target)
             loss = cross_entropy2d(score, target, size_average=self.size_average)
             loss /= len(data)
             if np.isnan(float(loss.data[0])):

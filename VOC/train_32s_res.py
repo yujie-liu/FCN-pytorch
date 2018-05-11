@@ -3,22 +3,15 @@ import datetime
 import os
 import os.path as osp
 import shlex
-import subprocess
 import pytz
 import torch
 import yaml
-
 import fcn
 import sys
 
 sys.path.insert(0, '../fcn/')
 import models
 from models.fcn_res import FCN32s_RES, FCN8s_RES
-from models.resnet import resnet34
-from models.resnet import BasicBlock
-from models.resnet import Bottleneck
-from models.resnet import ResNet
-#from models.vgg import VGG
 from trainer2 import Trainer
 from voc_loader2 import VOCSegmentation
 import sys
@@ -26,8 +19,6 @@ import warnings
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 configurations = {
-    # same configuration as original work
-    # https://github.com/shelhamer/fcn.berkeleyvision.org
     1: dict(
         max_iteration=100000,
         lr=1.0e-4,
@@ -36,32 +27,6 @@ configurations = {
         interval_validate=1000,  # originally 4000
     )
 }
-
-
-def git_hash():
-    cmd = 'git log -n 1 --pretty="%h"'
-    hash = subprocess.check_output(shlex.split(cmd)).strip()
-    return hash
-
-
-def get_log_dir(model_name, config_id, cfg):
-    # load config
-    name = 'MODEL-%s_CFG-%03d' % (model_name, config_id)
-    for k, v in cfg.items():
-        v = str(v)
-        if '/' in v:
-            continue
-        name += '_%s-%s' % (k.upper(), v)
-    now = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
-    name += '_VCS-%s' % git_hash()
-    name += '_TIME-%s' % now.strftime('%Y%m%d-%H%M%S')
-    # create out
-    log_dir = osp.join(here, 'logs', name)
-    if not osp.exists(log_dir):
-        os.makedirs(log_dir)
-    with open(osp.join(log_dir, 'config.yaml'), 'w') as f:
-        yaml.safe_dump(cfg, f, default_flow_style=False)
-    return log_dir
 
 
 def get_parameters(model, bias=False):
@@ -85,7 +50,6 @@ def get_parameters(model, bias=False):
             else:
                 yield m.weight
         elif isinstance(m, nn.ConvTranspose2d):
-        # weight is frozen because it is just a bilinear upsampling
             if bias:
                 assert m.bias is None
         elif isinstance(m, modules_skipped):
@@ -106,15 +70,12 @@ def main():
 
     gpu = args.gpu
     cfg = configurations[args.config]
-    # out = get_log_dir('fcn32s', args.config, cfg)
     resume = (args.resume == 1)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
     cuda = torch.cuda.is_available()
     torch.manual_seed(1337)
     if cuda:
         torch.cuda.manual_seed(1337)
-
-    # 1. dataset
 
     root = osp.expanduser('../pascal-voc')
     kwargs = {'num_workers': 8, 'pin_memory': True} if cuda else {}
@@ -131,22 +92,14 @@ def main():
     start_epoch = 0
     start_iteration = 0
     model = FCN32s_RES(n_class=21, pretrained=True)
-    #pretrained = False
-    #if pretrained:
-        #model.load_my_state_dict('./fcn32s_from_caffe.pth')
     if resume:
         model = FCN32s_RES(n_class=21)
         checkpoint = torch.load("./pth/ResNet32s-2.pth")
         model.load_state_dict(checkpoint['model_state_dict'])
         start_epoch = checkpoint['epoch']
         start_iteration = checkpoint['iteration']
-    # else:
-    #     vgg16 = VGG16(pretrained=True)
-    #     model.copy_params_from_vgg16(vgg16)
     if cuda:
         model = model.cuda()
-
-    # 3. optimizer
 
     #param = get_parameters(model, bias=False)
     #param1 = [x for x in param if x.requires_grad]
